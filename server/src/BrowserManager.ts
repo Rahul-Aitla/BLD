@@ -1,6 +1,7 @@
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
+import { EventEmitter } from 'events';
 
-export class BrowserManager {
+export class BrowserManager extends EventEmitter {
   private cdpUrl: string;
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
@@ -9,6 +10,7 @@ export class BrowserManager {
   private reconnectTimeout: NodeJS.Timeout | null = null;
 
   constructor() {
+    super();
     this.cdpUrl = process.env.CHROME_CDP_URL || 'http://localhost:9222';
     this.log('INFO', `Initialized BrowserManager with CDP URL: ${this.cdpUrl}`);
   }
@@ -50,6 +52,7 @@ export class BrowserManager {
         this.browser.on('disconnected', () => {
           this.log('WARN', 'Chromium connection disconnected.');
           this.cleanup();
+          this.emit('disconnected');
           this.triggerAutoReconnect();
         });
 
@@ -75,6 +78,7 @@ export class BrowserManager {
 
         this.log('INFO', 'Successfully connected and initialized browser context/page.');
         this.isConnecting = false;
+        this.emit('connected');
         
         // Clear any running reconnection attempts
         if (this.reconnectTimeout) {
@@ -198,5 +202,12 @@ export class BrowserManager {
   async getTitle(): Promise<string> {
     const page = await this.ensureConnected();
     return await page.title();
+  }
+
+  /**
+   * Expose the cached Playwright Page instance.
+   */
+  getPage(): Page | null {
+    return this.page;
   }
 }

@@ -99,6 +99,8 @@ Use TypeScript.
 Deliverable:
 
 Frames arriving continuously.
+
+
 Phase 4
 Convert Frames to Video Source
 Goal
@@ -119,6 +121,8 @@ Research:
 
 node-webrtc
 RTCVideoSource
+
+
 Phase 5
 Signaling Server
 IDE Prompt
