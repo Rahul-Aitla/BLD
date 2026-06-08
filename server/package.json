@@ -8,15 +8,22 @@
     "test:screencast": "ts-node src/test_screencast.ts",
     "test:fps": "ts-node src/test_fps.ts",
     "test:webrtc": "ts-node src/test_webrtc.ts",
+    "start": "ts-node src/server.ts",
     "build": "tsc"
   },
   "dependencies": {
     "@roamhq/wrtc": "^0.10.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "playwright": "^1.44.0",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "^20.14.2",
+    "@types/socket.io": "^3.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }

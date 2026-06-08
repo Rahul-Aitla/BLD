@@ -76,7 +76,10 @@ export class BrowserManager extends EventEmitter {
           this.log('INFO', 'Created new browser page.');
         }
 
-        this.log('INFO', 'Successfully connected and initialized browser context/page.');
+          const viewport = this.page.viewportSize();
+        this.log('INFO', `Playwright viewport size: ${JSON.stringify(viewport)}`);
+
+      this.log('INFO', 'Successfully connected and initialized browser context/page.');
         this.isConnecting = false;
         this.emit('connected');
         

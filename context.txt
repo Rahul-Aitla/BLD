@@ -142,6 +142,7 @@ Only WebRTC signaling.
 Deliverable:
 
 Peer connection established.
+
 Phase 6
 Frontend Viewer
 IDE Prompt
@@ -160,6 +161,7 @@ Use TypeScript.
 Deliverable:
 
 Live browser visible.
+
 Phase 7
 Mouse Control
 IDE Prompt

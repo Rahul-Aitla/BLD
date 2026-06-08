@@ -38,7 +38,7 @@ async function main() {
     const pc1 = new RTCPeerConnection();
     const pc2 = new RTCPeerConnection();
 
-    pc1.addTrack(videoSource.getTrack());
+    pc1.addTrack(videoSource.createTrack());
 
     pc2.ontrack = (event: any) => {
       console.log('[WebRTC] Receiver got track:', event.track.kind);
