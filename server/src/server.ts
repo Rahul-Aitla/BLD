@@ -71,7 +71,7 @@ async function main() {
 
     // Emit actual viewport so frontend uses correct dimensions
     (async () => {
-      let vpWidth = 1280, vpHeight = 720;
+      let vpWidth = 1920, vpHeight = 1080;
       const vp = page.viewportSize();
       if (vp) {
         vpWidth = vp.width;

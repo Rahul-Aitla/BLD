@@ -16,6 +16,7 @@ async function launchBrowser() {
       executablePath,
       [
         '--headless=new',
+        '--window-size=1280,720',
         '--remote-debugging-port=9223',
         '--remote-debugging-address=127.0.0.1',
         '--remote-allow-origins=*',

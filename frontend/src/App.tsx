@@ -19,34 +19,13 @@ export default function App() {
 
   function convertCoords(e: React.MouseEvent<HTMLVideoElement>) {
     const video = videoRef.current;
-    if (!video || !video.videoWidth) return null;
+    if (!video) return null;
     const rect = video.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-
-    // Account for object-fit: contain — compute actual rendered content rect
-    const videoAR = video.videoWidth / video.videoHeight;
-    const containerAR = rect.width / rect.height;
-    let contentWidth: number, contentHeight: number, offX: number, offY: number;
-    if (containerAR > videoAR) {
-      contentHeight = rect.height;
-      contentWidth = rect.height * videoAR;
-      offX = (rect.width - contentWidth) / 2;
-      offY = 0;
-    } else {
-      contentWidth = rect.width;
-      contentHeight = rect.width / videoAR;
-      offX = 0;
-      offY = (rect.height - contentHeight) / 2;
-    }
-
-    const relX = mouseX - offX;
-    const relY = mouseY - offY;
-    if (relX < 0 || relY < 0 || relX > contentWidth || relY > contentHeight) return null;
-
-    const browserX = (relX / contentWidth) * browserW.current;
-    const browserY = (relY / contentHeight) * browserH.current;
-    console.log(`[Coord] content=(${Math.round(contentWidth)}x${Math.round(contentHeight)}) @(${Math.round(offX)},${Math.round(offY)}) rel=(${Math.round(relX)},${Math.round(relY)}) browser=(${Math.round(browserX)},${Math.round(browserY)})`);
+    const browserX = (mouseX / rect.width) * browserW.current;
+    const browserY = (mouseY / rect.height) * browserH.current;
+    console.log(`[Coord] mouse=(${Math.round(mouseX)},${Math.round(mouseY)}) container=(${Math.round(rect.width)}x${Math.round(rect.height)}) browser=(${Math.round(browserX)},${Math.round(browserY)}) viewport=${browserW.current}x${browserH.current}`);
     return { x: Math.round(browserX), y: Math.round(browserY) };
   }
 
@@ -183,7 +162,7 @@ export default function App() {
         autoPlay
         playsInline
         muted
-        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        style={{ width: '100%', height: '100%', objectFit: 'fill' }}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onClick={handleClick}

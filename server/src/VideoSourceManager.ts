@@ -14,7 +14,7 @@ export class VideoSourceManager {
     const OUTPUT_HEIGHT = 360;
 
     const rgbaBuffer = await sharp(jpegBuffer)
-      .resize(OUTPUT_WIDTH, OUTPUT_HEIGHT, { fit: 'contain', background: { r: 0, g: 0, b: 0 } })
+      .resize(OUTPUT_WIDTH, OUTPUT_HEIGHT, { fit: 'fill' })
       .ensureAlpha()
       .raw()
       .toBuffer();
