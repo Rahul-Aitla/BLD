@@ -65,8 +65,9 @@ async function startBrowserSession() {
     videoSourceManager = new VideoSourceManager();
 
     screencastManager.onFrame(async (frameBuffer: Buffer) => {
+      if (!videoSourceManager) return;
       try {
-        await videoSourceManager!.feedFrame(frameBuffer);
+        await videoSourceManager.feedFrame(frameBuffer);
       } catch (err: any) {
         console.error('[Pipeline] feedFrame error:', err.message);
       }
@@ -239,7 +240,7 @@ async function main() {
 
       (async () => {
         const offer = await pc!.createOffer();
-        console.log(`[Signaling] ${socket.id} SDP offer:\n${offer.sdp}`);
+        console.log(`[Signaling] ${socket.id} SDP offer: type=${offer.type}, length=${offer.sdp.length}`);
         await pc!.setLocalDescription(offer);
         socket.emit('offer', { type: offer.type, sdp: offer.sdp });
       })().catch((err: any) => console.error('[Signaling] createOffer error:', err));

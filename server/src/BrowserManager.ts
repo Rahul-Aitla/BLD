@@ -8,6 +8,7 @@ export class BrowserManager extends EventEmitter {
   private page: Page | null = null;
   private isConnecting: boolean = false;
   private reconnectTimeout: NodeJS.Timeout | null = null;
+  private shouldReconnect: boolean = true;
 
   constructor() {
     super();
@@ -106,6 +107,7 @@ export class BrowserManager extends EventEmitter {
    * Disconnect cleanly from the browser.
    */
   async disconnect(): Promise<void> {
+    this.shouldReconnect = false;
     this.log('INFO', 'Disconnecting BrowserManager cleanly...');
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
@@ -128,6 +130,7 @@ export class BrowserManager extends EventEmitter {
   }
 
   private triggerAutoReconnect() {
+    if (!this.shouldReconnect) return;
     if (this.reconnectTimeout) return;
     this.log('INFO', 'Initiating background auto-reconnection loop.');
     

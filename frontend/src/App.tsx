@@ -147,7 +147,13 @@ export default function App() {
 
   // Keyboard and scroll listeners
   useEffect(() => {
+    function isInputFocused() {
+      const tag = document.activeElement?.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    }
+
     function handleKeyDown(e: KeyboardEvent) {
+      if (isInputFocused()) return;
       e.preventDefault();
       socketRef.current?.emit('keydown', {
         key: e.key, code: e.code,
@@ -155,6 +161,7 @@ export default function App() {
       });
     }
     function handleKeyUp(e: KeyboardEvent) {
+      if (isInputFocused()) return;
       e.preventDefault();
       socketRef.current?.emit('keyup', {
         key: e.key, code: e.code,
