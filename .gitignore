@@ -26,6 +26,12 @@ screenshot.png
 *.jpg
 *.gif
 
+# Generated / cache directories
+frames/
+generated/
+tmp/
+*.tsbuildinfo
+
 # IDE / Editor configuration
 .vscode/
 .idea/

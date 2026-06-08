@@ -1,7 +1,7 @@
 services:
   browser:
     build:
-      context: ./browser
+      context: ./chromium-service
       dockerfile: Dockerfile
     container_name: remote-browser-container
     ports:

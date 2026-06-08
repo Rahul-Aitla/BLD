@@ -3,11 +3,28 @@ import { chromium } from 'playwright';
 import { spawn, ChildProcess } from 'child_process';
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 3000;
 let browserProcess: ChildProcess | null = null;
 let socatProcess: ChildProcess | null = null;
 
+type BrowserState = 'stopped' | 'starting' | 'running' | 'stopping' | 'error';
+let browserState: BrowserState = 'stopped';
+
+function killProcess(proc: ChildProcess | null, name: string) {
+  if (proc) {
+    try {
+      proc.kill('SIGKILL');
+      console.log(`${name} killed.`);
+    } catch (err) {
+      console.error(`Error killing ${name}:`, err);
+    }
+  }
+}
+
 async function launchBrowser() {
+  if (browserState === 'running') return;
+  browserState = 'starting';
   try {
     const executablePath = chromium.executablePath();
     console.log(`Chromium executable path: ${executablePath}`);
@@ -16,7 +33,7 @@ async function launchBrowser() {
       executablePath,
       [
         '--headless=new',
-        '--window-size=1280,720',
+        '--window-size=1920,1080',
         '--remote-debugging-port=9223',
         '--remote-debugging-address=127.0.0.1',
         '--remote-allow-origins=*',
@@ -33,13 +50,16 @@ async function launchBrowser() {
 
     browserProcess.on('error', (err) => {
       console.error('Chromium process error:', err);
+      browserState = 'error';
     });
 
     browserProcess.on('exit', (code, signal) => {
       console.log(`Chromium process exited with code ${code} and signal ${signal}`);
+      if (browserState !== 'stopping') {
+        browserState = 'stopped';
+      }
     });
 
-    // Wait for Chromium to start
     await new Promise((resolve) => setTimeout(resolve, 1500));
     console.log('Chromium process spawned.');
 
@@ -64,18 +84,29 @@ async function launchBrowser() {
       console.log(`socat process exited with code ${code} and signal ${signal}`);
     });
 
-    // Wait a short moment for socat to bind
     await new Promise((resolve) => setTimeout(resolve, 1000));
     console.log('socat process spawned successfully.');
+    browserState = 'running';
   } catch (error) {
     console.error('Failed to launch browser services:', error);
-    process.exit(1);
+    browserState = 'error';
+    throw error;
   }
+}
+
+async function stopBrowser() {
+  if (browserState === 'stopped') return;
+  browserState = 'stopping';
+  killProcess(socatProcess, 'socat process');
+  socatProcess = null;
+  killProcess(browserProcess, 'Chromium process');
+  browserProcess = null;
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  browserState = 'stopped';
 }
 
 app.get('/health', async (req, res) => {
   try {
-    // Attempt to query the remote debugging port to confirm Chromium is responsive
     const response = await fetch('http://127.0.0.1:9223/json/version');
     if (response.ok) {
       const data = await response.json();
@@ -98,37 +129,54 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Fallback index route
 app.get('/', (req, res) => {
   res.send('Browser service is running. Use /health for health check.');
 });
 
-// Start the server and launch the browser
+app.post('/start', async (req, res) => {
+  try {
+    await launchBrowser();
+    res.json({ status: 'ok', state: browserState });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message, state: browserState });
+  }
+});
+
+app.post('/stop', async (req, res) => {
+  try {
+    await stopBrowser();
+    res.json({ status: 'ok', state: browserState });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message, state: browserState });
+  }
+});
+
+app.post('/restart', async (req, res) => {
+  try {
+    await stopBrowser();
+    await launchBrowser();
+    res.json({ status: 'ok', state: browserState });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message, state: browserState });
+  }
+});
+
+app.get('/status', (req, res) => {
+  res.json({
+    state: browserState,
+    chromium: browserProcess !== null,
+    socat: socatProcess !== null,
+  });
+});
+
 const server = app.listen(PORT, async () => {
   console.log(`Server listening on port ${PORT}`);
   await launchBrowser();
 });
 
-// Graceful shutdown
 const shutdown = async () => {
   console.log('Shutdown signal received. Closing browser and server...');
-  if (socatProcess) {
-    try {
-      console.log('Killing socat process...');
-      socatProcess.kill('SIGKILL');
-    } catch (err) {
-      console.error('Error killing socat process:', err);
-    }
-  }
-  if (browserProcess) {
-    try {
-      console.log('Killing Chromium process...');
-      browserProcess.kill('SIGKILL');
-      console.log('Chromium process killed.');
-    } catch (err) {
-      console.error('Error killing Chromium process:', err);
-    }
-  }
+  await stopBrowser();
   server.close(() => {
     console.log('Server stopped.');
     process.exit(0);

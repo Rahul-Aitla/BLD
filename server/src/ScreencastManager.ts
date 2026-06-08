@@ -2,6 +2,7 @@ import { CDPSession } from 'playwright';
 import { BrowserManager } from './BrowserManager';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 
 export interface FrameMetadata {
   timestamp?: number;
@@ -35,7 +36,7 @@ export class ScreencastManager {
 
   constructor(browserManager: BrowserManager) {
     this.browserManager = browserManager;
-    this.framesDir = path.join(__dirname, '..', 'frames');
+    this.framesDir = path.join(os.tmpdir(), 'screencast-frames');
     
     this.log('INFO', `Initialized ScreencastManager. Verification frames will save to: ${this.framesDir}`);
     
