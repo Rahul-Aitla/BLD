@@ -34,6 +34,7 @@ export default function App() {
   const [browserState, setBrowserState] = useState<BState>('stopped');
   const [url, setUrl] = useState('');
   const [resolution, setResolution] = useState(RESOLUTIONS[2]);
+  const [errorMsg, setErrorMsg] = useState('');
 
   async function checkStatus() {
     try {
@@ -56,7 +57,7 @@ export default function App() {
     });
 
     socket.on('disconnect', () => {
-      setStatus('Disconnected, reconnecting...');
+      setStatus('Disconnected');
     });
 
     socket.on('offer', async (offer: RTCSessionDescriptionInit) => {
@@ -210,36 +211,39 @@ export default function App() {
   }
 
   async function handleBrowserAction(action: 'start' | 'stop' | 'restart') {
+    setErrorMsg('');
+    if (action === 'start' || action === 'restart') {
+      setBrowserState('starting');
+      setStatus('Starting browser session...');
+    }
+    if (action === 'stop') {
+      setBrowserState('stopping');
+      setStatus('Stopping browser session...');
+    }
     try {
       const r = await fetch(`${SIGNALING_URL}/browser/${action}`, { method: 'POST' });
       const d = await r.json();
+      if (!r.ok) throw new Error(d.message || 'Request failed');
       setBrowserState(d.state);
 
       if (action === 'start' || action === 'restart') {
-        // Poll until state is 'running', then reconnect socket for WebRTC
-        const poll = setInterval(async () => {
-          try {
-            const r2 = await fetch(`${SIGNALING_URL}/browser/status`);
-            const d2 = await r2.json();
-            setBrowserState(d2.state);
-            if (d2.state === 'running') {
-              clearInterval(poll);
-              connectSocket();
-            }
-          } catch {}
-        }, 1000);
+        if (d.state === 'running') connectSocket();
+        else setErrorMsg(`Session ended with state: ${d.state}`);
       } else if (action === 'stop') {
         pcRef.current?.close();
         pcRef.current = null;
         if (videoRef.current) videoRef.current.srcObject = null;
         setStatus('Stopped');
       }
-    } catch {}
+    } catch (err: any) {
+      setBrowserState('error');
+      setErrorMsg(err.message || 'Action failed');
+      setStatus('Error');
+    }
   }
 
-  const isActive = browserState === 'running';
-  const isConnecting = status === 'Connecting...' || status === 'Connected, waiting for stream...' || status === 'Setting up WebRTC...';
-  const showSpinner = isConnecting || browserState === 'starting' || browserState === 'stopping';
+  const isStreaming = status === 'Streaming';
+  const showSpinner = browserState === 'starting' || browserState === 'stopping' || (!isStreaming && browserState === 'running');
 
   return (
     <div style={{
@@ -257,12 +261,12 @@ export default function App() {
         fontFamily: 'monospace', fontSize: 13, color: '#ccc',
         flexWrap: 'wrap',
       }}>
-        <button onClick={() => handleBrowserAction('start')} disabled={isActive || browserState === 'starting'}
-          style={{ padding: '3px 10px', cursor: isActive ? 'not-allowed' : 'pointer', background: isActive ? '#333' : '#2a7', border: 'none', borderRadius: 4, color: '#fff', fontSize: 12 }}>
+        <button onClick={() => handleBrowserAction('start')} disabled={browserState === 'running' || browserState === 'starting'}
+          style={{ padding: '3px 10px', cursor: (browserState === 'running' || browserState === 'starting') ? 'not-allowed' : 'pointer', background: browserState === 'running' ? '#333' : '#2a7', border: 'none', borderRadius: 4, color: '#fff', fontSize: 12 }}>
           ▶ Start
         </button>
-        <button onClick={() => handleBrowserAction('stop')} disabled={!isActive}
-          style={{ padding: '3px 10px', cursor: !isActive ? 'not-allowed' : 'pointer', background: !isActive ? '#333' : '#c33', border: 'none', borderRadius: 4, color: '#fff', fontSize: 12 }}>
+        <button onClick={() => handleBrowserAction('stop')} disabled={browserState !== 'running'}
+          style={{ padding: '3px 10px', cursor: browserState !== 'running' ? 'not-allowed' : 'pointer', background: browserState !== 'running' ? '#333' : '#c33', border: 'none', borderRadius: 4, color: '#fff', fontSize: 12 }}>
           ■ Stop
         </button>
         <button onClick={() => handleBrowserAction('restart')}
@@ -279,6 +283,7 @@ export default function App() {
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
           {browserState}
         </span>
+        {errorMsg && <span style={{ color: '#c44', fontSize: 12, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{errorMsg}</span>}
 
         <span style={{ color: '#888' }}>|</span>
 
