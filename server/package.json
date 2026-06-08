@@ -1,0 +1,18 @@
+{
+  "name": "server-service",
+  "version": "1.0.0",
+  "description": "Backend control and streaming service",
+  "main": "dist/test.js",
+  "scripts": {
+    "test": "ts-node src/test.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "playwright": "^1.44.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
