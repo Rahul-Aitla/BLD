@@ -1,0 +1,13 @@
+services:
+  browser:
+    build:
+      context: ./browser
+      dockerfile: Dockerfile
+    container_name: remote-browser-container
+    ports:
+      - "3000:3000"
+      - "9222:9222"
+    ipc: host
+    security_opt:
+      - seccomp=unconfined
+    restart: unless-stopped

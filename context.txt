@@ -1,0 +1,304 @@
+Goal
+
+Understand the complete system before coding.
+I am building a remote browser system.
+
+Requirements:
+- Chromium must run in headless mode inside Docker.
+- Frontend should receive a live browser stream.
+- Frontend should send mouse, keyboard, and scroll events.
+- Backend should control Chromium using Playwright.
+- Streaming should use WebRTC.
+- Signaling should use Socket.IO.
+
+
+Only build one phase at a time.
+Phase 1
+Create Docker Browser Container
+Goal
+
+Run headless Chromium.
+
+IDE Prompt
+Create a Docker container that runs:
+- Node.js
+- Playwright
+- Chromium
+
+Chromium must launch using:
+
+--headless=new
+--remote-debugging-port=9222
+
+Expose port 9222.
+
+Create a health endpoint that confirms Chromium is running.
+
+Chrome supports remote debugging in headless mode.
+
+Deliverable:
+
+docker compose up
+
+Browser starts successfully.
+
+
+Phase 2
+Connect Playwright
+Goal
+
+Control browser remotely.
+
+IDE Prompt
+Connect Playwright to an already running headless Chromium instance using CDP.
+
+Implement:
+
+navigate(url)
+click(x,y)
+type(text)
+scroll(delta)
+
+Return working TypeScript code.
+
+Deliverable:
+
+Backend controls browser.
+Phase 3
+CDP Screencast
+
+This is the most important phase.
+
+Chrome DevTools Protocol exposes:
+
+Page.startScreencast
+
+which continuously sends rendered frames.
+
+IDE Prompt
+Using Chrome DevTools Protocol:
+
+Connect to headless Chromium.
+
+Enable:
+Page.enable
+
+Start:
+Page.startScreencast
+
+Receive:
+Page.screencastFrame
+
+Acknowledge frames using:
+Page.screencastFrameAck
+
+Print frame sizes and timestamps.
+
+Use TypeScript.
+
+Deliverable:
+
+Frames arriving continuously.
+Phase 4
+Convert Frames to Video Source
+Goal
+
+Turn screencast frames into WebRTC video.
+
+IDE Prompt
+I receive JPEG/base64 frames from Chrome DevTools Protocol.
+
+Create a pipeline that converts incoming frames into a MediaStreamTrack compatible with node-webrtc.
+
+Target:
+20-30 FPS
+
+Provide architecture and implementation.
+
+Research:
+
+node-webrtc
+RTCVideoSource
+Phase 5
+Signaling Server
+IDE Prompt
+Create a Socket.IO signaling server.
+
+Support:
+
+offer
+answer
+iceCandidate
+
+Provide complete TypeScript implementation.
+
+No chat features.
+Only WebRTC signaling.
+
+Deliverable:
+
+Peer connection established.
+Phase 6
+Frontend Viewer
+IDE Prompt
+Create a Next.js component.
+
+Requirements:
+
+- Connect to Socket.IO signaling server.
+- Establish WebRTC connection.
+- Render remote browser stream in a video element.
+- Auto reconnect on refresh.
+
+Use React hooks.
+Use TypeScript.
+
+Deliverable:
+
+Live browser visible.
+Phase 7
+Mouse Control
+IDE Prompt
+Create a React component that captures:
+
+mousedown
+mouseup
+mousemove
+
+Convert coordinates from displayed video size to actual browser viewport size.
+
+Send coordinates to backend.
+
+Backend should execute:
+
+Playwright mouse.move
+Playwright mouse.click
+
+Deliverable:
+
+Browser clicks work.
+Phase 8
+Keyboard Control
+IDE Prompt
+Capture keyboard events from frontend.
+
+Send:
+
+keydown
+keyup
+
+Backend executes Playwright keyboard methods.
+
+Support:
+letters
+numbers
+enter
+tab
+backspace
+arrows
+
+Deliverable:
+
+Typing works.
+Phase 9
+Scroll Support
+IDE Prompt
+Capture wheel events.
+
+Send deltaY.
+
+Execute:
+
+mouse.wheel()
+
+using Playwright.
+
+Deliverable:
+
+Scrolling works.
+Phase 10
+Browser Session Lifecycle
+IDE Prompt
+Implement browser lifecycle management.
+
+Endpoints:
+
+POST /browser/start
+POST /browser/stop
+POST /browser/restart
+
+When stopped:
+
+- close Playwright
+- close CDP
+- destroy container
+
+Return session state.
+Phase 11
+Production Polish
+
+Add:
+
+URL Bar
+Latency Indicator
+Resolution Selector
+Reconnect Logic
+Browser Status
+Loading State
+Repositories Worth Studying
+Neko
+
+The closest project to your assignment.
+
+Neko GitHub
+
+Study:
+
+signaling
+streaming
+browser session architecture
+BrowserGap
+
+Remote browser implementation ideas.
+
+BrowserGap GitHub
+
+node-webrtc
+
+WebRTC implementation for Node.
+
+node-webrtc GitHub
+
+One thing I would change
+
+If this were my submission, I would build Phase 1 → Phase 9 completely without Docker first.
+
+Once:
+
+WebRTC works
+CDP screencast works
+Playwright control works
+
+then I would move Chromium into Docker.
+
+That reduces debugging difficulty by almost 70%.
+
+Most developers fail because they debug:
+
+Docker
++
+Chromium
++
+CDP
++
+WebRTC
++
+React
+
+all at once.
+
+Build the browser system locally first.
+
+Containerize last.
+
+Biggest risk: Phase 4 — converting CDP JPEG frames into a RTCVideoSource via node-webrtc. This is the part most people get stuck on. If you hit a wall there, JPEG-over-WebSocket (what I built) is a valid fallback that still demonstrates the core concept.
