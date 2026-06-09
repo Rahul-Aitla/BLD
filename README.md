@@ -336,13 +336,13 @@ In this project, it handles two distinct responsibilities:
 2. **Input Events** — transmission of mouse clicks, mouse moves, keyboard input, scroll, and resize commands from the frontend to the backend
 
 ```
-  Frontend                          Backend
-     │                                │
-     ├── offer (SDP) ────────────────┤
-     │◄── answer (SDP) ──────────────┤
-     ├── ice-candidate ──────────────┤
-     │◄── ice-candidate ─────────────┤
-     │                                │
+  Frontend                       Backend
+     │                              │
+     ├── offer (SDP) ───────────────┤
+     │◄── answer (SDP) ─────────────┤
+     ├── ice-candidate ─────────────┤
+     │◄── ice-candidate ────────────┤
+     │                              │
      ├── mouse-down/move/up ────────┤
      ├── keydown/keyup ─────────────┤
      ├── scroll ────────────────────┤
