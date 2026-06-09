@@ -6,6 +6,29 @@ Built with **React**, **TypeScript**, **Node.js**, **Playwright**, **Chrome DevT
 
 ---
 
+## Quick Access
+
+| Section | Description |
+|---------|-------------|
+| [Demo](#demo) | Features and demo video |
+| [Screenshots](#screenshots) | UI screenshots |
+| [Architecture](#architecture) | System architecture diagram |
+| [Streaming Flow](#streaming-flow) | End-to-end frame pipeline |
+| [Browser Control Flow](#browser-control-flow) | Input event flow |
+| [Features](#features) | Feature list |
+| [Tech Stack](#tech-stack) | Technologies used |
+| [Project Concepts](#project-concepts) | CDP, WebRTC, Playwright, Sharp, socat, signaling, backpressure, state machine |
+| [Engineering Challenges Solved](#engineering-challenges-solved) | Key problems and solutions |
+| [Project Structure](#project-structure) | File/directory layout |
+| [Installation](#installation) | Setup guide |
+| [Running](#running) | Start instructions |
+| [Testing](#testing) | Test commands |
+| [Future Improvements](#future-improvements) | Roadmap |
+| [Learnings](#learnings) | Key takeaways |
+| [Final Result](#final-result) | Summary |
+
+---
+
 ## Demo
 
 ### Features Demonstrated
@@ -20,25 +43,9 @@ Built with **React**, **TypeScript**, **Node.js**, **Playwright**, **Chrome DevT
 
 ### Demo Video
 
-<!-- [Add Loom / YouTube link here] -->
-
----
-
-## Screenshots
-
-<!-- Create a `docs/screenshots/` directory and add images: -->
-
-### Browser Viewer
-
-![viewer](docs/screenshots/viewer.png)
-
-### Browser Navigation
-
-![navigation](docs/screenshots/navigation.png)
-
-### Streaming Session
-
-![streaming](docs/screenshots/streaming.png)
+<video src="docs/demo.mp4" controls width="100%">
+  Your browser does not support the video tag.
+</video>
 
 ---
 
