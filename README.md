@@ -42,7 +42,7 @@ Built with **React**, **TypeScript**, **Node.js**, **Playwright**, **Chrome DevT
 
 ### Demo Video
 
-<video src="docs/demo.mp4" controls width="100%">
+<video src="https://drive.google.com/file/d/1fX58WpXxacivsayTvSTFuGDNGUKeERVb/view?usp=sharing" controls width="100%">
   Your browser does not support the video tag.
 </video>
 
