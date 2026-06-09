@@ -363,7 +363,6 @@ export default function App() {
           }}
           onMouseDown={e => { const c = convertCoords(e); if (c) socketRef.current?.emit('mouse-down', c); }}
           onMouseUp={e => { const c = convertCoords(e); if (c) socketRef.current?.emit('mouse-up', c); }}
-          onClick={e => { const c = convertCoords(e); if (c) socketRef.current?.emit('mouse-click', c); }}
         />
       </div>
 
