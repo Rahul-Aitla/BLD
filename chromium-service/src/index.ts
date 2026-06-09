@@ -61,8 +61,18 @@ async function launchBrowser() {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log('Chromium process spawned.');
+    // Poll until Chromium debug port (9223) is ready
+    const maxRetries = 20;
+    let ready = false;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const resp = await fetch('http://127.0.0.1:9223/json/version');
+        if (resp.ok) { ready = true; break; }
+      } catch {}
+      await new Promise(r => setTimeout(r, 500));
+    }
+    if (!ready) throw new Error('Chromium debug port 9223 not ready after timeout');
+    console.log('Chromium process ready (port 9223).');
 
     console.log('Spawning socat to proxy port 9222 to 127.0.0.1:9223...');
     socatProcess = spawn(
@@ -85,8 +95,17 @@ async function launchBrowser() {
       console.log(`socat process exited with code ${code} and signal ${signal}`);
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log('socat process spawned successfully.');
+    // Poll until socat proxy port (9222) is ready
+    ready = false;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const resp = await fetch('http://127.0.0.1:9222/json/version');
+        if (resp.ok) { ready = true; break; }
+      } catch {}
+      await new Promise(r => setTimeout(r, 500));
+    }
+    if (!ready) throw new Error('socat proxy port 9222 not ready after timeout');
+    console.log('socat proxy ready (port 9222).');
     browserState = 'running';
   } catch (error) {
     console.error('Failed to launch browser services:', error);
