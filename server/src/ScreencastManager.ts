@@ -88,9 +88,26 @@ export class ScreencastManager {
     this.fpsFrameCount = 0;
     this.currentFps = 0;
 
+    // Inject CSS animation to force continuous frame generation
+    try {
+      const page = this.browserManager.getPage();
+      if (page) {
+        await page.evaluate(`document.head.appendChild(
+          Object.assign(document.createElement('style'), {
+            id: 'screencast-anim',
+            textContent: '@keyframes k{from{opacity:.999}to{opacity:1}}body{animation:k 2s infinite}'
+          })
+        )`);
+      }
+    } catch (err: any) {
+      this.log('WARN', `Failed to inject screencast animation: ${err.message}`);
+    }
+
     // Create frames directory if it doesn't exist
-    if (!fs.existsSync(this.framesDir)) {
-      fs.mkdirSync(this.framesDir, { recursive: true });
+    if (process.env.DEBUG_FRAME_DUMPS === 'true') {
+      if (!fs.existsSync(this.framesDir)) {
+        fs.mkdirSync(this.framesDir, { recursive: true });
+      }
     }
 
     await this.startScreencastSession();
@@ -143,6 +160,17 @@ export class ScreencastManager {
   async stop(): Promise<void> {
     this.isScreencasting = false;
     this.log('INFO', 'Stopping screencast...');
+
+    // Remove screencast animation
+    try {
+      const page = this.browserManager.getPage();
+      if (page) {
+        await page.evaluate(`document.getElementById('screencast-anim')?.remove()`);
+      }
+    } catch (err: any) {
+      this.log('WARN', `Failed to remove screencast animation: ${err.message}`);
+    }
+
     if (this.cdpSession) {
       try {
         await this.cdpSession.send('Page.stopScreencast');
@@ -195,8 +223,8 @@ export class ScreencastManager {
         this.lastFpsCalcTime = now;
       }
 
-      // Save every 100th frame for verification
-      if (this.frameCount % 100 === 0) {
+      // Save every 100th frame for verification (only when DEBUG_FRAME_DUMPS is set)
+      if (process.env.DEBUG_FRAME_DUMPS === 'true' && this.frameCount % 100 === 0) {
         const framePath = path.join(this.framesDir, `frame-${this.frameCount}.jpg`);
         fs.writeFileSync(framePath, frameBuffer);
         this.log('INFO', `Saved 100th frame verification screenshot`, {

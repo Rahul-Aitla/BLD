@@ -9,6 +9,7 @@ export class BrowserManager extends EventEmitter {
   private isConnecting: boolean = false;
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private shouldReconnect: boolean = true;
+  private onDisconnected: (() => void) | null = null;
 
   constructor() {
     super();
@@ -50,12 +51,13 @@ export class BrowserManager extends EventEmitter {
         this.browser = await chromium.connectOverCDP(this.cdpUrl);
 
         // Set up disconnection handler
-        this.browser.on('disconnected', () => {
+        this.onDisconnected = () => {
           this.log('WARN', 'Chromium connection disconnected.');
           this.cleanup();
           this.emit('disconnected');
           this.triggerAutoReconnect();
-        });
+        };
+        this.browser.on('disconnected', this.onDisconnected);
 
         // Initialize and cache context
         const contexts = this.browser.contexts();
@@ -124,6 +126,10 @@ export class BrowserManager extends EventEmitter {
   }
 
   private cleanup() {
+    if (this.browser && this.onDisconnected) {
+      this.browser.removeListener('disconnected', this.onDisconnected);
+    }
+    this.onDisconnected = null;
     this.browser = null;
     this.context = null;
     this.page = null;

@@ -4,12 +4,16 @@ import sharp from 'sharp';
 export class VideoSourceManager {
   private source: wrtc.nonstandard.RTCVideoSource;
   private frameCount = 0;
+  private isProcessing = false;
 
   constructor() {
     this.source = new wrtc.nonstandard.RTCVideoSource({ isScreencast: true });
   }
 
   async feedFrame(jpegBuffer: Buffer, metadataWidth?: number, metadataHeight?: number): Promise<void> {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+    try {
     const OUTPUT_WIDTH = metadataWidth ?? 1280;
     const OUTPUT_HEIGHT = metadataHeight ?? 720;
 
@@ -38,6 +42,9 @@ export class VideoSourceManager {
 
     this.source.onFrame(i420Frame);
     this.frameCount++;
+    } finally {
+      this.isProcessing = false;
+    }
   }
 
   createTrack(): wrtc.MediaStreamTrack {

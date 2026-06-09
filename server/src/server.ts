@@ -22,9 +22,12 @@ let screencastManager: ScreencastManager | null = null;
 let videoSourceManager: VideoSourceManager | null = null;
 let io: SocketIOServer | null = null;
 const activePeers: Map<string, wrtc.RTCPeerConnection> = new Map();
+let lifecycleLock = false;
 
 async function startBrowserSession() {
+  if (lifecycleLock) return;
   if (sessionState === 'running') return;
+  lifecycleLock = true;
   sessionState = 'starting';
   try {
     // Start Docker container with proper port mappings
@@ -41,7 +44,7 @@ async function startBrowserSession() {
       try {
         const resp = await fetch(`${BROWSER_SERVICE_URL}/health`);
         if (resp.ok) break;
-      } catch {}
+      } catch (e) { /* wait and retry */ }
       await new Promise(r => setTimeout(r, 2000));
       if (i === maxRetries - 1) throw new Error('Browser service not reachable');
     }
@@ -50,15 +53,8 @@ async function startBrowserSession() {
     browserManager = new BrowserManager();
     await browserManager.connect();
     const page = browserManager.getPage()!;
-    await page.goto('https://google.com');
-
-    // Inject subtle CSS animation so screencast produces frames continuously
-    await page.evaluate(`document.head.appendChild(
-      Object.assign(document.createElement('style'), {
-        textContent: '@keyframes k{from{opacity:.999}to{opacity:1}}body{animation:k 2s infinite}'
-      })
-    )`);
-    console.log('[Lifecycle] Navigated to https://google.com');
+    await page.goto('about:blank');
+    console.log('[Lifecycle] Navigated to about:blank');
 
     // Start CDP screencast → WebRTC pipeline
     screencastManager = new ScreencastManager(browserManager);
@@ -79,14 +75,19 @@ async function startBrowserSession() {
   } catch (err: any) {
     console.error('[Lifecycle] Failed to start browser session:', err.message);
     sessionState = 'error';
+    lifecycleLock = false;
     // Cleanup partial state
-    try { await stopBrowserSession(); } catch {}
+    try { await stopBrowserSession(); } catch (cleanupErr) { console.warn('[Lifecycle] Cleanup error after failed start:', cleanupErr); }
     throw err;
+  } finally {
+    lifecycleLock = false;
   }
 }
 
 async function stopBrowserSession() {
+  if (lifecycleLock) return;
   if (sessionState === 'stopped') return;
+  lifecycleLock = true;
   sessionState = 'stopping';
 
   // Close all peer connections
@@ -94,7 +95,7 @@ async function stopBrowserSession() {
     try {
       pc.close();
       console.log(`[Lifecycle] Closed peer connection ${id}`);
-    } catch {}
+    } catch (err) { console.warn(`[Lifecycle] Error closing peer ${id}:`, err); }
   }
   activePeers.clear();
 
@@ -107,7 +108,7 @@ async function stopBrowserSession() {
   if (screencastManager) {
     try {
       await screencastManager.stop();
-    } catch {}
+    } catch (err) { console.warn('[Lifecycle] Error stopping screencast:', err); }
     screencastManager = null;
   }
 
@@ -115,7 +116,7 @@ async function stopBrowserSession() {
   if (videoSourceManager) {
     try {
       videoSourceManager.stop();
-    } catch {}
+    } catch (err) { console.warn('[Lifecycle] Error stopping video source:', err); }
     videoSourceManager = null;
   }
 
@@ -123,14 +124,14 @@ async function stopBrowserSession() {
   if (browserManager) {
     try {
       await browserManager.disconnect();
-    } catch {}
+    } catch (err) { console.warn('[Lifecycle] Error disconnecting browser:', err); }
     browserManager = null;
   }
 
   // Stop browser container via API
   try {
     await fetch(`${BROWSER_SERVICE_URL}/stop`, { method: 'POST' });
-  } catch {}
+  } catch (err) { console.warn('[Lifecycle] Error stopping browser service:', err); }
 
   // Destroy Docker container
   try {
@@ -141,6 +142,7 @@ async function stopBrowserSession() {
   }
 
   sessionState = 'stopped';
+  lifecycleLock = false;
 }
 
 async function main() {
@@ -230,7 +232,7 @@ async function main() {
               try {
                 const size: any = await page.evaluate('({w: window.innerWidth, h: window.innerHeight})');
                 if (size && size.w && size.h) { vpWidth = size.w; vpHeight = size.h; }
-              } catch {}
+              } catch (e) { /* fallback to default dimensions */ }
             }
           }
         }
@@ -255,32 +257,6 @@ async function main() {
           .catch((err: any) => console.error('[Signaling] addIce error:', err));
       });
     }
-
-    socket.on('mouse-click', async (data: { x: number; y: number }) => {
-      try {
-        const page = browserManager?.getPage();
-        if (page) {
-          await page.mouse.move(data.x, data.y);
-          const el: any = await page.evaluate(`(function(x, y) {
-            try {
-              var target = document.elementFromPoint(x, y);
-              if (!target) return { tag: null, reason: 'no element at point' };
-              return {
-                tag: target.tagName,
-                text: (target.textContent || '').substring(0, 100),
-                href: target.getAttribute ? target.getAttribute('href') : null,
-                id: target.id || null,
-                className: (typeof target.className === 'string') ? target.className : null
-              };
-            } catch(e) { return { error: e.message }; }
-          })(${data.x}, ${data.y})`);
-          console.log(`[Input] mouse-click at (${data.x}, ${data.y}) → hit:`, JSON.stringify(el));
-          await page.mouse.click(data.x, data.y);
-        }
-      } catch (err: any) {
-        console.error('[Input] mouse-click error:', err.message);
-      }
-    });
 
     socket.on('mouse-move', async (data: { x: number; y: number }) => {
       try {
