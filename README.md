@@ -42,9 +42,7 @@ Built with **React**, **TypeScript**, **Node.js**, **Playwright**, **Chrome DevT
 
 ### Demo Video
 
-<video src="https://github.com/Rahul-Aitla/BLD/raw/main/docs/demo.mp4" controls width="100%">
-  Your browser does not support the video tag.
-</video>
+[![Demo](https://img.youtube.com/vi/5XIEO963nH0/0.jpg)](https://youtu.be/5XIEO963nH0)
 
 ---
 
