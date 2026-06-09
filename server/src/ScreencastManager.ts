@@ -124,7 +124,7 @@ export class ScreencastManager {
       this.log('INFO', 'Starting CDP Screencast...');
       await this.cdpSession.send('Page.startScreencast', {
         format: 'jpeg',
-        quality: 80,
+        quality: 95,
         maxWidth: 1920,
         maxHeight: 1080,
         everyNthFrame: 1

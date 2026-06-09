@@ -74,8 +74,8 @@ async function main() {
     console.log('[WebRTC] Offer/answer exchanged\n');
 
     // Start screencast + feed frames into WebRTC
-    screencastManager.onFrame(async (frameBuffer: Buffer, _metadata: any) => {
-      await videoSource.feedFrame(frameBuffer);
+    screencastManager.onFrame(async (frameBuffer: Buffer, metadata) => {
+      await videoSource.feedFrame(frameBuffer, metadata.deviceWidth, metadata.deviceHeight);
       pipelineFrames++;
     });
 

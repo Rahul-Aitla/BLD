@@ -41,6 +41,7 @@ async function launchBrowser() {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
+        '--force-device-scale-factor=1',
       ],
       {
         stdio: 'ignore',

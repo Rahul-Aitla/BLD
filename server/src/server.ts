@@ -64,10 +64,10 @@ async function startBrowserSession() {
     screencastManager = new ScreencastManager(browserManager);
     videoSourceManager = new VideoSourceManager();
 
-    screencastManager.onFrame(async (frameBuffer: Buffer) => {
+    screencastManager.onFrame(async (frameBuffer: Buffer, metadata) => {
       if (!videoSourceManager) return;
       try {
-        await videoSourceManager.feedFrame(frameBuffer);
+        await videoSourceManager.feedFrame(frameBuffer, metadata.deviceWidth, metadata.deviceHeight);
       } catch (err: any) {
         console.error('[Pipeline] feedFrame error:', err.message);
       }

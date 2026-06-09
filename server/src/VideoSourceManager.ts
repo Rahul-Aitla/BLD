@@ -9,9 +9,9 @@ export class VideoSourceManager {
     this.source = new wrtc.nonstandard.RTCVideoSource({ isScreencast: true });
   }
 
-  async feedFrame(jpegBuffer: Buffer, _metadataWidth?: number, _metadataHeight?: number): Promise<void> {
-    const OUTPUT_WIDTH = 640;
-    const OUTPUT_HEIGHT = 360;
+  async feedFrame(jpegBuffer: Buffer, metadataWidth?: number, metadataHeight?: number): Promise<void> {
+    const OUTPUT_WIDTH = metadataWidth ?? 1280;
+    const OUTPUT_HEIGHT = metadataHeight ?? 720;
 
     const rgbaBuffer = await sharp(jpegBuffer)
       .resize(OUTPUT_WIDTH, OUTPUT_HEIGHT, { fit: 'fill' })
