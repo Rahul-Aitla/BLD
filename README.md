@@ -11,7 +11,6 @@ Built with **React**, **TypeScript**, **Node.js**, **Playwright**, **Chrome DevT
 | Section | Description |
 |---------|-------------|
 | [Demo](#demo) | Features and demo video |
-| [Screenshots](#screenshots) | UI screenshots |
 | [Architecture](#architecture) | System architecture diagram |
 | [Streaming Flow](#streaming-flow) | End-to-end frame pipeline |
 | [Browser Control Flow](#browser-control-flow) | Input event flow |
@@ -61,16 +60,16 @@ Built with **React**, **TypeScript**, **Node.js**, **Playwright**, **Chrome DevT
                              │ Socket.IO (mouse, keyboard, scroll, resize)
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Node.js Backend (server)                  │
+│                    Node.js Backend (server)                 │
 │                                                             │
-│  ┌─────────────────┐  ┌────────────────────────────────┐   │
-│  │  BrowserManager  │  │  ScreencastManager             │   │
-│  │  (Playwright)    │  │  (CDP Page.startScreencast)    │   │
-│  └────────┬────────┘  └──────────────┬─────────────────┘   │
+│  ┌─────────────────┐  ┌────────────────────────────────┐    │
+│  │  BrowserManager │  │  ScreencastManager             │    │
+│  │  (Playwright)   │  │  (CDP Page.startScreencast)    │    │
+│  └────────┬────────┘  └──────────────┬─────────────────┘    │
 │           │                          │ JPEG frames          │
 │           │                          ▼                      │
 │           │              ┌────────────────────────┐         │
-│           │              │  VideoSourceManager     │         │
+│           │              │  VideoSourceManager    │         │
 │           │              │  Sharp → I420 → WebRTC │         │
 │           │              └───────────┬────────────┘         │
 │           │                          │ RTCVideoSource       │
@@ -79,15 +78,15 @@ Built with **React**, **TypeScript**, **Node.js**, **Playwright**, **Chrome DevT
 │           │              │  RTCPeerConnection     │         │
 │           │              └───────────┬────────────┘         │
 └───────────┼──────────────────────────┼──────────────────────┘
-            │ CDP                     │ WebRTC
-            ▼                         ▼
+            │ CDP                      │ WebRTC
+            ▼                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   Chromium Service (Docker)                  │
+│                   Chromium Service (Docker)                 │
 │                                                             │
 │  ┌──────────────────────┐    ┌──────────────────────────┐   │
-│  │   Chromium (headless) │    │  socat (port 9222→9223) │   │
-│  │   --remote-debugging  │    └──────────────────────────┘   │
-│  └──────────────────────┘                                    │
+│  │   Chromium (headless)│    │  socat (port 9222→9223)  │   │
+│  │   --remote-debugging │    └──────────────────────────┘   │
+│  └──────────────────────┘                                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -337,17 +336,17 @@ In this project, it handles two distinct responsibilities:
 2. **Input Events** — transmission of mouse clicks, mouse moves, keyboard input, scroll, and resize commands from the frontend to the backend
 
 ```
-Frontend                    Backend
-    │                          │
-    ├─ offer (SDP) ──────────► │
-    │◄── answer (SDP) ────────┤
-    ├─ ice-candidate ────────► │
-    │◄─ ice-candidate ────────┤
-    │                          │
-    ├─ mouse-down/move/up ──► │
-    ├─ keydown/keyup ────────►│
-    ├─ scroll ───────────────►│
-    └─ navigate ─────────────►│
+  Frontend                          Backend
+     │                                │
+     ├── offer (SDP) ────────────────┤
+     │◄── answer (SDP) ──────────────┤
+     ├── ice-candidate ──────────────┤
+     │◄── ice-candidate ─────────────┤
+     │                                │
+     ├── mouse-down/move/up ────────┤
+     ├── keydown/keyup ─────────────┤
+     ├── scroll ────────────────────┤
+     └── navigate ──────────────────┤
 ```
 
 ---
